@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo Xeryus · Pedido</title>
+<meta name="description" content="Escolha as mochilas direto no catálogo Xeryus, veja o total com IPI e envie o pedido para a FRS.">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --line:#e4e1d9;
+  --accent:#e4572e; --accent-ink:#ffffff; --soft:#fdeee8;
+  --ok:#1f8a4c; --ok-soft:#e3f4ea; --wa:#25d366; --bad:#c62828; --bad-soft:#fdeaea;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a; --card:#212127; --ink:#f2f2f4; --muted:#a2a2ab; --line:#33333b;
+    --accent:#ff7a52; --accent-ink:#1a0e09; --soft:#3a2219;
+    --ok:#4cc382; --ok-soft:#173326; --bad:#ff6b6b; --bad-soft:#3a1c1c;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:120px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:120px}
+header{background:var(--ink);color:var(--bg);padding:16px}
+header h1{margin:0;font-size:21px}
+header p{margin:4px 0 0;opacity:.75;font-size:13.5px}
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:6px 12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--soft)}
+.tab .n{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:0 7px;font-size:12px;margin-left:4px}
+.busca{display:flex;gap:6px;flex:0 1 220px;min-width:170px}
+.busca input{flex:1;min-width:0;font:inherit;font-size:15px;padding:7px 10px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--ink)}
+.dica{max-width:1100px;margin:12px auto 0;padding:0 12px;font-size:14px;color:var(--muted)}
+.dica b{color:var(--ink)}
+.dica .plus{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;vertical-align:-4px}
+#paginas{max-width:1100px;margin:0 auto;padding:12px}
+.pg{position:relative;margin:0 0 14px;background:#fff;border-radius:6px;box-shadow:0 1px 4px #0002;overflow:hidden}
+.pg img{display:block;width:100%;height:100%}
+.pg .num{position:absolute;left:6px;bottom:6px;font-size:11px;background:#0008;color:#fff;border-radius:10px;padding:1px 7px}
+.add{position:absolute;transform:translate(3px,-50%);min-width:30px;height:30px;padding:0 8px;border-radius:15px;border:2px solid #fff;background:var(--accent);color:#fff;font:700 18px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 4px #0005;display:flex;align-items:center;justify-content:center;gap:3px;z-index:2}
+.add.on{background:#1d1d1f;color:#fff;border-color:#e4572e;font-size:15px}
+.add.on small{font-size:11px;font-weight:600;opacity:.8}
+.add.off{background:#9a9a9a;opacity:.75;min-width:24px;height:24px;font-size:14px;padding:0 6px}
+.add.flash{animation:fl 1.2s 3}
+.l .add{transform:translate(calc(-100% - 3px),-50%)}
+@keyframes fl{50%{transform:translate(3px,-50%) scale(1.5);box-shadow:0 0 0 8px #e4572e66}}
+@media (max-width:700px){.add{min-width:23px;height:23px;font-size:15px;padding:0 5px;border-width:1.5px}.add.on{font-size:12px}.add.on small{font-size:9px}.add.off{min-width:17px;height:17px;font-size:10px}}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);z-index:30;box-shadow:0 -2px 10px #0001}
+.bar-in{max-width:1100px;margin:0 auto;padding:10px 12px;display:flex;align-items:center;gap:12px}
+.sum{flex:1;min-width:0}
+.sum .l1{font-size:13px;color:var(--muted)}
+.sum .tot{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.sum .tot small{font-size:12px;font-weight:500;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.meter.ok i{background:var(--ok)}
+.falta{font-size:12.5px;margin-top:3px;color:var(--bad);font-weight:600}
+.falta.ok{color:var(--ok)}
+.btn{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-ink);flex:none}
+.btn.wa{background:var(--wa);color:#08301a}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1}
+
+dialog{border:0;border-radius:14px;padding:0;width:min(680px,calc(100vw - 16px));max-height:calc(100dvh - 16px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:#0009}
+dialog[open]{display:flex;flex-direction:column}
+.dh{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dh h2{margin:0;font-size:18px}
+.db{padding:14px 16px;overflow:auto;flex:1 1 auto;min-height:0}
+.df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+.df .btn{flex:1 1 auto}
+.x{border:0;background:transparent;font-size:26px;line-height:1;color:var(--muted);cursor:pointer}
+
+#item{width:min(420px,calc(100vw - 16px))}
+#item .foto{background:#fff;display:grid;place-items:center;height:240px;border-bottom:1px solid var(--line)}
+#item .foto img{max-width:100%;max-height:230px}
+.code{font:700 13px ui-monospace,Consolas,monospace;color:var(--muted)}
+.nm{font-weight:700;font-size:16px;margin:2px 0 6px}
+.pr{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.pr s{font-size:13px;font-weight:400;color:var(--muted);margin-right:6px}
+.pr small{font-size:12px;font-weight:500;color:var(--muted)}
+.est{font-size:13px;color:var(--muted);margin-top:4px}
+.est.bad{color:var(--bad);font-weight:600}
+.qrow{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none;background:var(--card)}
+.step button{width:42px;height:42px;border:0;background:transparent;color:var(--ink);font-size:22px;cursor:pointer}
+.step input{width:52px;height:42px;border:0;text-align:center;padding:0;font:inherit;font-weight:700;background:transparent;color:var(--ink);-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.step.sm button{width:34px;height:34px;font-size:18px}.step.sm input{width:40px;height:34px}
+.sub{font-weight:700;font-variant-numeric:tabular-nums}
+.minnote{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+label b{color:var(--accent)}
+.grid input,.grid textarea{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.grid textarea{min-height:52px;resize:vertical}
+.grid input.err{border-color:var(--bad);background:var(--bad-soft)}
+.list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row img,.row .noimg{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--line);flex:none}
+.row .info{flex:1;min-width:0}
+.row .nm{font-size:14px;margin:0;overflow-wrap:anywhere}
+.row .meta{font-size:12.5px;color:var(--muted)}
+.row .right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.row .warn{color:var(--bad);font-size:12px;font-weight:600}
+@media (max-width:480px){.row{flex-wrap:wrap}.row .right{flex-direction:row;align-items:center;justify-content:space-between;width:100%;padding-left:68px}}
+.totais{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-variant-numeric:tabular-nums}
+.totais div{display:flex;justify-content:space-between;padding:3px 0}
+.totais .big{font-size:20px;font-weight:800;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.aviso{border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;background:var(--bad-soft);color:var(--bad);font-weight:600}
+.aviso.ok{background:var(--ok-soft);color:var(--ok)}
+.vazio{padding:28px 10px;text-align:center;color:var(--muted)}
+.msg{font-size:14px;padding:0 16px 12px}
+.msg a{color:var(--ok);font-weight:700}
+.links{display:flex;gap:14px;justify-content:center;width:100%}
+.links button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13.5px;cursor:pointer;text-decoration:underline}
+footer{text-align:center;color:var(--muted);font-size:12px;margin:20px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Catálogo Xeryus · Monte seu pedido</h1>
+  <p>FRS Representações · toque no <b>+</b> ao lado do código para escolher</p>
+</header>
+
+<div class="top"><div class="top-in">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <form class="busca" id="fbusca"><input id="busca" type="search" inputmode="numeric" placeholder="Buscar código" aria-label="Buscar código"><button class="btn" style="padding:7px 12px;border-radius:20px">Ir</button></form>
+</div></div>
+
+<p class="dica" id="dica"></p>
+<div id="paginas"></div>
+<footer id="rodape"></footer>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum">
+    <div class="l1" id="l1">Nenhum item escolhido</div>
+    <div class="tot" id="tot">R$ 0,00 <small>com IPI</small></div>
+    <div class="meter" id="meter"><i></i></div>
+    <div class="falta" id="falta"></div>
+  </div>
+  <button class="btn" id="ver" disabled>Ver pedido</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<dialog id="item">
+  <div class="foto"><img alt=""></div>
+  <div class="db" id="item-b"></div>
+  <div class="df"><button class="btn ghost" id="item-ok">Fechar</button></div>
+</dialog>
+
+<dialog id="ped">
+  <div class="dh"><h2>Seu pedido</h2><button class="x" id="ped-x" aria-label="Fechar">×</button></div>
+  <div class="db">
+    <div class="list" id="linhas"></div>
+    <div class="totais" id="totais"></div>
+    <div class="aviso" id="aviso"></div>
+    <h3 style="font-size:16px;margin:18px 0 8px">Dados da loja</h3>
+    <div class="grid" style="margin-bottom:0" id="dados">
+      <div class="full"><label for="f-loja">Nome da loja / Razão social <b>*</b></label><input id="f-loja" autocomplete="organization"></div>
+      <div><label for="f-cnpj">CNPJ <b>*</b></label><input id="f-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" maxlength="18"></div>
+      <div><label for="f-cidade">Cidade / UF <b>*</b></label><input id="f-cidade" placeholder="Ex.: Maringá/PR"></div>
+      <div class="full"><label for="f-comprador">Comprador (nome)</label><input id="f-comprador" autocomplete="name"></div>
+      <div class="full"><label for="f-obs">Observação</label><textarea id="f-obs" placeholder="Prazo, entrega, alguma dúvida..."></textarea></div>
+    </div>
+  </div>
+  <div class="df">
+    <button class="btn wa" id="enviar">Enviar pedido pelo WhatsApp</button>
+    <button class="btn ghost" id="baixar">Baixar PDF</button>
+    <button class="btn ghost" id="compartilhar" hidden>Compartilhar PDF</button>
+    <div class="links"><button id="copiar">Copiar texto</button><button id="limpar">Limpar pedido</button></div>
+  </div>
+  <div class="msg" id="msg" hidden></div>
+</dialog>
+
+<script src="produtos.js"></script>
+<script>
+const WHATSAPP = "5544999081166";
+const {meta: META, cats: CATS, prods: P} = window.CATALOGO;
+const IPI = META.ipi, MINIMO = META.minimo, QMIN = 2;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl = v => v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e){ return d; } };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+let pedido = load("xer-pedido", {});            // código -> qtd
+Object.keys(pedido).forEach(c => { if (!P[c] || P[c].st !== "ok") delete pedido[c]; });
+const maxQ = c => P[c].s || 9999;
+const ordem = load("xer-ordem", []).filter(c => pedido[c]);  // ordem de inclusão
+function save(){ store("xer-pedido", pedido); store("xer-ordem", ordem); }
+
+$("#dica").innerHTML = `Toque no <span class="plus">+</span> ao lado do código para colocar <b>${QMIN} unidades</b> (mínimo por item); toque de novo no número para mudar a quantidade. Produto com <b>X vermelho</b> está sem estoque. Preços da tabela Xeryus de ${META.tabela}, <b>sem desconto</b>; o total já soma o <b>IPI de ${String(IPI*100).replace(".",",")}%</b>.`;
+$("#rodape").textContent = `Estoque de ${META.estoque.replace("-","/")} · sujeito a confirmação · FRS Representações · WhatsApp (44) 99908-1166`;
+
+// ---------- abas e páginas
+let atual = load("xer-aba", CATS[0].id);
+if (!CATS.some(c => c.id === atual)) atual = CATS[0].id;
+function tabs(){
+  const n = {};
+  for (const c of Object.keys(pedido)) n[P[c].cat] = (n[P[c].cat] || 0) + 1;
+  $("#tabs").innerHTML = CATS.map(c => `<button class="tab" role="tab" data-id="${c.id}" aria-selected="${c.id === atual}">${c.nome}${n[c.nome] ? `<span class="n">${n[c.nome]}</span>` : ""}</button>`).join("");
+}
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  atual = b.dataset.id; store("xer-aba", atual); tabs(); pages(); window.scrollTo({top:0});
+});
+function botao(c){
+  const p = P[c], q = pedido[c];
+  if (p.st !== "ok") return `<button class="add off" data-c="${c}" aria-label="${c} sem estoque">×</button>`;
+  if (q) return `<button class="add on" data-c="${c}" aria-label="${c}: ${q} unidades">${q}<small>un</small></button>`;
+  return `<button class="add" data-c="${c}" aria-label="Adicionar ${c}">+</button>`;
+}
+function pages(){
+  const cat = CATS.find(c => c.id === atual);
+  $("#paginas").innerHTML = cat.pages.map((pg, i) => `
+    <div class="pg" id="pg-${cat.id}-${i+1}" style="aspect-ratio:${pg.w}/${pg.h}">
+      <img src="${pg.f}" alt="${cat.nome} página ${i+1}" ${i > 1 ? 'loading="lazy"' : ""} width="${pg.w}" height="${pg.h}">
+      ${pg.p.filter(b => P[b.c]).map(b => `<span class="${b.l ? "l" : ""}" style="position:absolute;left:${b.l ? b.x : Math.min(b.x, 94)}%;top:${b.y}%" data-slot="${b.c}">${botao(b.c)}</span>`).join("")}
+      <span class="num">${i+1}/${cat.pages.length}</span>
+    </div>`).join("");
+}
+function refresh(c){
+  document.querySelectorAll(`[data-slot="${c}"]`).forEach(s => s.innerHTML = botao(c));
+  tabs(); totais();
+}
+$("#paginas").addEventListener("click", e => {
+  const b = e.target.closest(".add"); if (!b) return;
+  const c = b.dataset.c, p = P[c];
+  if (p.st === "ok" && !pedido[c]){
+    setQ(c, QMIN);
+    toast(`${QMIN}× ${c} ${p.d} · ${brl(p.p * QMIN)}`);
+    return;
+  }
+  abreItem(c);
+});
+function setQ(c, q){
+  q = Math.min(Math.max(0, Math.round(q) || 0), maxQ(c));
+  if (q > 0 && q < QMIN) q = QMIN;
+  if (q){ if (!pedido[c]) ordem.push(c); pedido[c] = q; }
+  else { delete pedido[c]; const i = ordem.indexOf(c); if (i >= 0) ordem.splice(i, 1); }
+  save(); refresh(c);
+}
+let tt;
+function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("show"), 2200); }
+
+// ---------- janela do item
+let itemC = null;
+const estTxt = p => ({ok: `Em estoque: ${p.s} un.`, pouco: `Só ${p.s} un. em estoque — abaixo do mínimo de ${QMIN} por item`, esg: "Esgotado", compra: "Esgotado · em compra pela fábrica", fora: "Fora de linha / sem preço"})[p.st];
+function abreItem(c){
+  itemC = c; const p = P[c];
+  const img = $("#item .foto img"); img.src = p.m ? `mini/${c}.jpg` : ""; img.alt = p.d;
+  $("#item .foto").hidden = !p.m;
+  renderItem(); $("#item").showModal();
+}
+function renderItem(){
+  const c = itemC, p = P[c], q = pedido[c] || 0;
+  $("#item-b").innerHTML = `
+    <div class="code">${c} · ${p.cat} p. ${p.pg}</div>
+    <div class="nm">${esc(p.d || "Produto")}</div>
+    ${p.p ? `<div class="pr">${p.de ? `<s>${brl(p.de)}</s>` : ""}${brl(p.p)} <small>un. sem IPI</small></div>` : ""}
+    <div class="est ${p.st === "ok" ? "" : "bad"}">${estTxt(p)}</div>
+    ${p.st === "ok" ? `
+    <div class="qrow">
+      <div class="step"><button data-d="-1" aria-label="Menos">−</button><input id="iq" type="number" inputmode="numeric" min="0" value="${q}" aria-label="Quantidade"><button data-d="1" aria-label="Mais">+</button></div>
+      <div><div class="sub">${brl(p.p * q)}</div><div class="minnote" style="margin:0">${q ? `${brl(p.p * q * (1 + IPI))} com IPI` : "nada escolhido"}</div></div>
+    </div>
+    <div class="minnote">Mínimo de ${QMIN} unidades por item. Baixar abaixo de ${QMIN} tira o item do pedido.</div>` : ""}`;
+}
+$("#item-b").addEventListener("click", e => {
+  const b = e.target.closest("button[data-d]"); if (!b) return;
+  const q = pedido[itemC] || 0, d = +b.dataset.d;
+  setQ(itemC, d > 0 ? (q ? q + 1 : QMIN) : (q <= QMIN ? 0 : q - 1)); renderItem();
+});
+$("#item-b").addEventListener("change", e => { if (e.target.id === "iq"){ setQ(itemC, +e.target.value); renderItem(); } });
+$("#item-ok").addEventListener("click", () => $("#item").close());
+$("#item").addEventListener("click", e => { if (e.target === $("#item")) $("#item").close(); });
+
+// ---------- totais
+function contas(){
+  const cs = ordem.filter(c => pedido[c]);
+  const pecas = cs.reduce((s, c) => s + pedido[c], 0);
+  const prod = Math.round(cs.reduce((s, c) => s + P[c].p * pedido[c], 0) * 100) / 100;
+  const ipi = Math.round(prod * IPI * 100) / 100;
+  return {cs, pecas, prod, ipi, total: prod + ipi, falta: Math.max(0, MINIMO - prod)};
+}
+function totais(){
+  const t = contas();
+  $("#l1").textContent = t.cs.length ? `${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças · produtos ${brl(t.prod)}` : "Nenhum item escolhido";
+  $("#tot").innerHTML = `${brl(t.total)} <small>com IPI</small>`;
+  $("#meter i").style.width = Math.min(100, t.prod / MINIMO * 100) + "%";
+  $("#meter").classList.toggle("ok", !t.falta);
+  $("#falta").className = "falta" + (t.falta ? "" : " ok");
+  $("#falta").textContent = t.falta ? `Faltam ${brl(t.falta)} para o pedido mínimo de ${brl(MINIMO)}` : `Pedido mínimo de ${brl(MINIMO)} atingido`;
+  $("#ver").disabled = !t.cs.length;
+  if ($("#ped").open) renderPed();
+}
+
+// ---------- pedido
+const campos = ["loja","cnpj","cidade","comprador","obs"];
+const dados = load("xer-dados", {});
+campos.forEach(c => {
+  const el = $("#f-"+c); el.value = dados[c] || "";
+  el.addEventListener("input", () => {
+    if (c === "cnpj") el.value = mascaraCnpj(el.value);
+    el.classList.remove("err"); dados[c] = el.value; store("xer-dados", dados); checa();
+  });
+});
+function mascaraCnpj(v){
+  const d = v.replace(/\D/g,"").slice(0,14);
+  return d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2");
+}
+function cnpjValido(v){
+  const d = v.replace(/\D/g,"");
+  if (d.length !== 14 || /^(\d)\1+$/.test(d)) return false;
+  const dv = n => { let s = 0, p = n - 7; for (let i = 0; i < n; i++){ s += +d[i] * p--; if (p < 2) p = 9; } const r = s % 11; return r < 2 ? 0 : 11 - r; };
+  return dv(12) === +d[12] && dv(13) === +d[13];
+}
+function faltando(){
+  const f = [];
+  if (!$("#f-loja").value.trim()) f.push(["loja", "nome da loja"]);
+  if (!cnpjValido($("#f-cnpj").value)) f.push(["cnpj", "CNPJ válido"]);
+  if (!$("#f-cidade").value.trim()) f.push(["cidade", "cidade/UF"]);
+  return f;
+}
+function checa(){
+  const t = contas(), f = faltando();
+  const av = $("#aviso");
+  if (t.falta){ av.className = "aviso"; av.innerHTML = `Faltam <b>${brl(t.falta)}</b> em produtos para chegar ao pedido mínimo de ${brl(MINIMO)} (valor dos produtos, sem IPI). Volte ao catálogo e escolha mais itens.`; }
+  else if (f.length){ av.className = "aviso"; av.textContent = "Para enviar, preencha os dados da loja abaixo: " + f.map(x => x[1]).join(", ") + "."; }
+  else { av.className = "aviso ok"; av.textContent = "Tudo certo! Pedido mínimo atingido."; }
+  const pode = !t.falta && !f.length;
+  ["#enviar","#baixar","#compartilhar"].forEach(s => $(s).disabled = !pode);
+  return pode;
+}
+function renderPed(){
+  const t = contas();
+  $("#linhas").innerHTML = t.cs.length ? t.cs.map(c => {
+    const p = P[c], q = pedido[c];
+    return `<div class="row">
+      ${p.m ? `<img src="mini/${c}.jpg" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+      <div class="info"><div class="code">${c} · ${p.cat}</div><div class="nm">${esc(p.d)}</div><div class="meta">${brl(p.p)} un.${q >= p.s ? ` · <span class="warn">estoque: ${p.s}</span>` : ""}</div></div>
+      <div class="right"><div class="step sm" data-c="${c}"><button data-d="-1" aria-label="Menos">−</button><input type="number" inputmode="numeric" value="${q}" aria-label="Quantidade ${c}"><button data-d="1" aria-label="Mais">+</button></div><div class="sub">${brl(p.p * q)}</div></div>
+    </div>`;
+  }).join("") : `<div class="vazio">Nenhum item. Volte ao catálogo e toque no + dos produtos.</div>`;
+  $("#totais").innerHTML = `
+    <div><span>Produtos (${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças)</span><span>${brl(t.prod)}</span></div>
+    <div><span>IPI ${String(IPI*100).replace(".",",")}%</span><span>${brl(t.ipi)}</span></div>
+    <div class="big"><span>Total com IPI</span><span>${brl(t.total)}</span></div>
+    <div style="font-size:12.5px;color:var(--muted)"><span>Preços de tabela, sem desconto. Desconto e prazo conforme a política Xeryus, confirmados pela FRS.</span></div>`;
+  checa();
+}
+$("#linhas").addEventListener("click", e => {
+  const b = e.target.closest("button[data-d]"); if (!b) return;
+  const c = b.closest(".step").dataset.c, q = pedido[c] || 0;
+  setQ(c, +b.dataset.d > 0 ? q + 1 : (q <= QMIN ? (confirm(`Tirar o ${c} do pedido?`) ? 0 : q) : q - 1));
+});
+$("#linhas").addEventListener("change", e => {
+  const s = e.target.closest(".step"); if (!s) return;
+  const v = +e.target.value;
+  if (v < QMIN && !confirm(`O mínimo é ${QMIN} por item. Tirar o ${s.dataset.c} do pedido?`)) { renderPed(); return; }
+  setQ(s.dataset.c, v < QMIN ? 0 : v);
+});
+$("#ver").addEventListener("click", () => { $("#msg").hidden = true; renderPed(); $("#ped").showModal(); });
+$("#ped-x").addEventListener("click", () => $("#ped").close());
+
+function mensagem(){
+  const t = contas(), v = Object.fromEntries(campos.map(c => [c, $("#f-"+c).value.trim()]));
+  const L = ["*PEDIDO XERYUS*", `Loja: ${v.loja}`, `CNPJ: ${v.cnpj}`, `Cidade: ${v.cidade}`];
+  if (v.comprador) L.push(`Comprador: ${v.comprador}`);
+  if (v.obs) L.push(`Obs.: ${v.obs}`);
+  L.push("");
+  for (const c of t.cs){ const p = P[c]; L.push(`${pedido[c]}x ${c} - ${p.d} - ${brl(p.p)} = ${brl(p.p * pedido[c])}`); }
+  L.push("", `Itens: ${t.cs.length} | Peças: ${t.pecas}`, `Produtos: ${brl(t.prod)}`, `IPI ${String(IPI*100).replace(".",",")}%: ${brl(t.ipi)}`, `*Total com IPI: ${brl(t.total)}*`, `(tabela ${META.tabela}, sem desconto)`);
+  return L.join("\n");
+}
+
+// ---------- PDF
+function carregaScript(src){
+  return new Promise((ok, erro) => {
+    if (document.querySelector(`script[src="${src}"]`)) return ok();
+    const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = erro; document.head.appendChild(s);
+  });
+}
+async function imgData(c){
+  try {
+    const r = await fetch(`mini/${c}.jpg`); if (!r.ok) return null;
+    const b = await r.blob();
+    const url = await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); });
+    const dim = await new Promise(ok => { const i = new Image(); i.onload = () => ok([i.naturalWidth, i.naturalHeight]); i.onerror = () => ok(null); i.src = url; });
+    return dim ? {url, w: dim[0], h: dim[1]} : null;
+  } catch(e){ return null; }
+}
+const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "loja";
+async function gerarPDF(){
+  await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js");
+  const {jsPDF} = window.jspdf;
+  const t = contas(), v = Object.fromEntries(campos.map(c => [c, $("#f-"+c).value.trim()]));
+  const imgs = Object.fromEntries(await Promise.all(t.cs.map(async c => [c, P[c].m ? await imgData(c) : null])));
+  const agora = new Date();
+  const data = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 12;
+  const LAR = [228,87,46], TIN = [29,29,31], CIN = [107,107,112];
+  doc.setFillColor(...TIN); doc.rect(0, 0, W, 22, "F");
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.text("PEDIDO XERYUS", M, 11);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.text("FRS Representações · WhatsApp (44) 99908-1166", M, 17);
+  doc.text(data, W - M, 11, {align:"right"}); doc.text(`Tabela ${META.tabela} · sem desconto`, W - M, 17, {align:"right"});
+  let y = 29; doc.setTextColor(...TIN);
+  const linha = (r, val) => { doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text(r, M, y); doc.setFont("helvetica","normal");
+    const tx = doc.splitTextToSize(val || "-", W - 2*M - 28); doc.text(tx, M + 28, y); y += 5 * tx.length; };
+  linha("Loja", v.loja); linha("CNPJ", v.cnpj); linha("Cidade / UF", v.cidade);
+  if (v.comprador) linha("Comprador", v.comprador); if (v.obs) linha("Observação", v.obs);
+  y += 2;
+  const R = 17;
+  doc.autoTable({
+    startY: y, margin: {left:M, right:M, bottom:16}, rowPageBreak: "avoid",
+    head: [["Foto", "Código", "Produto", "Qtd", "Unit.", "Subtotal"]],
+    body: t.cs.map(c => ["", c, `${P[c].d}\n${P[c].cat} p. ${P[c].pg}`, pedido[c], brl(P[c].p), brl(P[c].p * pedido[c])]),
+    styles: {fontSize:9, cellPadding:1.6, textColor:TIN, lineColor:[228,225,217], lineWidth:0.2, valign:"middle", minCellHeight:R},
+    headStyles: {fillColor:LAR, textColor:255, fontStyle:"bold", minCellHeight:7},
+    columnStyles: {0:{cellWidth:R+2}, 1:{cellWidth:16, fontStyle:"bold"}, 3:{cellWidth:12, halign:"right"}, 4:{cellWidth:22, halign:"right"}, 5:{cellWidth:25, halign:"right", fontStyle:"bold"}},
+    didParseCell: d => { if (d.section === "head" && d.column.index >= 3) d.cell.styles.halign = "right"; },
+    didDrawCell: d => {
+      if (d.section !== "body" || d.column.index !== 0) return;
+      const im = imgs[t.cs[d.row.index]]; if (!im) return;
+      const box = Math.min(d.cell.width, d.cell.height) - 2, k = Math.min(box / im.w, box / im.h);
+      const w = im.w * k, h = im.h * k;
+      doc.addImage(im.url, "JPEG", d.cell.x + (d.cell.width - w) / 2, d.cell.y + (d.cell.height - h) / 2, w, h);
+    }
+  });
+  y = doc.lastAutoTable.finalY + 6;
+  if (y > H - 45){ doc.addPage(); y = 20; }
+  const tl = (r, val, big) => { doc.setFont("helvetica", big ? "bold" : "normal"); doc.setFontSize(big ? 13 : 10.5);
+    doc.text(r, W - M - 105, y); doc.text(val, W - M, y, {align:"right"}); y += big ? 8 : 6; };
+  tl(`Produtos (${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças)`, brl(t.prod));
+  tl(`IPI ${String(IPI*100).replace(".",",")}%`, brl(t.ipi));
+  doc.setDrawColor(...TIN); doc.line(W - M - 105, y - 3.5, W - M, y - 3.5); y += 1.5;
+  tl("TOTAL COM IPI", brl(t.total), true);
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++){
+    doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...CIN);
+    doc.text(`Preços de tabela sem desconto; desconto e prazo conforme política Xeryus. Estoque de ${META.estoque.replace("-","/")}, sujeito a confirmação.`, M, H - 7);
+    doc.text(`Página ${i} de ${n}`, W - M, H - 7, {align:"right"});
+  }
+  return new File([doc.output("blob")], `Pedido-Xeryus_${slug(v.loja)}_${agora.toISOString().slice(0,10)}.pdf`, {type:"application/pdf"});
+}
+function baixa(arq){
+  const url = URL.createObjectURL(arq), a = document.createElement("a");
+  a.href = url; a.download = arq.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function avisa(h){ $("#msg").innerHTML = h; $("#msg").hidden = false; }
+function marcaErros(){ faltando().forEach(([c]) => $("#f-"+c).classList.add("err")); }
+async function comPDF(btn, fn){
+  if (!checa()){ marcaErros(); return; }
+  const r = btn.textContent; btn.disabled = true; btn.textContent = "Gerando PDF...";
+  let arq = null; try { arq = await gerarPDF(); } catch(e){ console.error(e); }
+  btn.textContent = r; btn.disabled = false;
+  fn(arq);
+}
+$("#baixar").addEventListener("click", e => comPDF(e.currentTarget, arq => {
+  if (!arq) return avisa("Não foi possível gerar o PDF agora. Use <b>Enviar pedido pelo WhatsApp</b>.");
+  baixa(arq); avisa(`PDF <b>${esc(arq.name)}</b> baixado.`);
+}));
+$("#enviar").addEventListener("click", () => {
+  if (!checa()){ marcaErros(); return; }
+  const wa = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem())}`;
+  const j = window.open(wa, "_blank"); if (!j) location.href = wa;
+  avisa("Abrimos a conversa com a FRS com o pedido escrito: é só tocar em <b>enviar</b> no WhatsApp. Se quiser mandar com as fotos, use <b>Baixar PDF</b> e anexe na conversa.");
+});
+if (navigator.canShare) {
+  try { $("#compartilhar").hidden = !navigator.canShare({files:[new File(["x"], "x.pdf", {type:"application/pdf"})]}); } catch(e){}
+}
+$("#compartilhar").addEventListener("click", e => comPDF(e.currentTarget, async arq => {
+  if (!arq) return avisa("Não foi possível gerar o PDF agora.");
+  try { await navigator.share({files:[arq], title:"Pedido Xeryus"}); avisa("Pronto! Escolha o contato da <b>FRS (44) 99908-1166</b>."); }
+  catch(err){ if (err.name !== "AbortError") { baixa(arq); avisa("PDF baixado; anexe na conversa com a FRS."); } }
+}));
+$("#copiar").addEventListener("click", async e => {
+  try { await navigator.clipboard.writeText(mensagem()); e.target.textContent = "Copiado!"; } catch(err){ e.target.textContent = "Não deu para copiar"; }
+  setTimeout(() => e.target.textContent = "Copiar texto", 2000);
+});
+$("#limpar").addEventListener("click", () => {
+  if (!confirm("Apagar todos os produtos escolhidos? Os dados da loja continuam.")) return;
+  const cs = Object.keys(pedido); pedido = {}; ordem.length = 0; save(); cs.forEach(refresh); $("#ped").close();
+});
+
+// ---------- busca por código
+$("#fbusca").addEventListener("submit", e => {
+  e.preventDefault();
+  const q = $("#busca").value.replace(/\D/g, "");
+  if (q.length !== 5 || !P[q]) return toast(q ? `Código ${q} não está nos catálogos` : "Digite os 5 números do código");
+  const cat = CATS.find(c => c.nome === P[q].cat);
+  if (atual !== cat.id){ atual = cat.id; store("xer-aba", atual); tabs(); pages(); }
+  const pg = $(`#pg-${cat.id}-${P[q].pg}`);
+  pg.querySelector("img").loading = "eager";
+  pg.scrollIntoView({block:"start"});
+  const b = pg.querySelector(`[data-slot="${q}"] .add`);
+  if (b){ b.classList.add("flash"); setTimeout(() => b.classList.remove("flash"), 3700); }
+  $("#busca").blur();
+});
+
+tabs(); pages(); totais();
+</script>
+</body>
+</html>
