@@ -302,7 +302,7 @@ function totais(){
   $("#meter i").style.width = Math.min(100, t.prod / MINIMO * 100) + "%";
   $("#meter").classList.toggle("ok", !t.falta);
   $("#falta").className = "falta" + (t.falta ? "" : " ok");
-  $("#falta").textContent = t.falta ? `Faltam ${brl(t.falta)} para o pedido mínimo de ${brl(MINIMO)}` : `Pedido mínimo de ${brl(MINIMO)} atingido`;
+  $("#falta").textContent = t.falta ? `Pedido mínimo: ${brl(MINIMO)}` : `Pedido mínimo de ${brl(MINIMO)} atingido`;
   $("#ver").disabled = !t.cs.length;
   if ($("#ped").open) renderPed();
 }
