@@ -194,6 +194,10 @@ const IPI = META.ipi, MINIMO = META.minimo, QMIN = 2;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const brl = v => v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+// faixas de desconto pelo valor LÍQUIDO (já com desconto, sem IPI): vale a maior faixa cujo líquido atinge o piso
+const FAIXAS = [{d:0.15, piso:10000}, {d:0.10, piso:5000}, {d:0.05, piso:3500}];
+const faixasTxt = `<b>Desconto pelo valor líquido do pedido</b> (já com o desconto, sem IPI): de R$ 3.500 a R$ 5.000 → <b>5%</b>; de R$ 5.000 a R$ 10.000 → <b>10%</b>; de R$ 10.000 a R$ 20.000 → <b>15%</b> (acima de R$ 20.000, fale com a FRS). Na prática, pela tabela: a partir de ${brlI(3500/0.95)} → 5%; ${brlI(5000/0.9)} → 10%; ${brlI(10000/0.85)} → 15%. O desconto já entra no total automaticamente.`;
+function brlI(v){ return brl(Math.ceil(v * 100) / 100); }
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e){ return d; } };
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
@@ -204,7 +208,7 @@ const maxQ = c => P[c].s || 9999;
 const ordem = load("xer-ordem", []).filter(c => pedido[c]);  // ordem de inclusão
 function save(){ store("xer-pedido", pedido); store("xer-ordem", ordem); }
 
-$("#dica").innerHTML = `Toque no <span class="plus">+</span> ao lado do código para colocar <b>${QMIN} unidades</b> (mínimo por item); toque de novo no número para mudar a quantidade. Produto com <b>X vermelho</b> está sem estoque. Preços da tabela Xeryus de ${META.tabela}, <b>sem desconto</b>; o total já soma o <b>IPI de ${String(IPI*100).replace(".",",")}%</b>.`;
+$("#dica").innerHTML = `Toque no <span class="plus">+</span> ao lado do código para colocar <b>${QMIN} unidades</b> (mínimo por item); toque de novo no número para mudar a quantidade. Produto com <b>X vermelho</b> está sem estoque. Preços da tabela Xeryus de ${META.tabela}; o total já soma o <b>IPI de ${String(IPI*100).replace(".",",")}%</b>.<br>${faixasTxt}`;
 $("#rodape").textContent = `Estoque de ${META.estoque.replace("-","/")} · sujeito a confirmação · FRS Representações · WhatsApp (44) 99908-1166`;
 
 // ---------- abas e páginas
@@ -295,17 +299,20 @@ function contas(){
   const cs = ordem.filter(c => pedido[c]);
   const pecas = cs.reduce((s, c) => s + pedido[c], 0);
   const prod = Math.round(cs.reduce((s, c) => s + P[c].p * pedido[c], 0) * 100) / 100;
-  const ipi = Math.round(prod * IPI * 100) / 100;
-  return {cs, pecas, prod, ipi, total: prod + ipi, falta: Math.max(0, MINIMO - prod)};
+  const fx = FAIXAS.find(f => Math.round(prod * (1 - f.d) * 100) / 100 >= f.piso);
+  const desc = fx ? fx.d : 0;
+  const vdesc = Math.round(prod * desc * 100) / 100, liq = Math.round((prod - vdesc) * 100) / 100;
+  const ipi = Math.round(liq * IPI * 100) / 100;
+  return {cs, pecas, prod, desc, vdesc, liq, ipi, total: Math.round((liq + ipi) * 100) / 100, falta: Math.max(0, MINIMO - prod)};
 }
 function totais(){
   const t = contas();
   $("#l1").textContent = t.cs.length ? `${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças · produtos ${brl(t.prod)}` : "Nenhum item escolhido";
-  $("#tot").innerHTML = `${brl(t.total)} <small>com IPI</small>`;
+  $("#tot").innerHTML = `${brl(t.total)} <small>com IPI${t.desc ? ` · ${String(Math.round(t.desc*100))}% de desconto` : ""}</small>`;
   $("#meter i").style.width = Math.min(100, t.prod / MINIMO * 100) + "%";
   $("#meter").classList.toggle("ok", !t.falta);
   $("#falta").className = "falta" + (t.falta ? "" : " ok");
-  $("#falta").textContent = t.falta ? `Pedido mínimo: ${brl(MINIMO)}` : `Pedido mínimo de ${brl(MINIMO)} atingido`;
+  $("#falta").textContent = t.falta ? `Pedido mínimo: ${brl(MINIMO)}` : (t.desc ? `Desconto de ${String(Math.round(t.desc*100))}% aplicado` : `Pedido mínimo de ${brl(MINIMO)} atingido`);
   $("#ver").disabled = !t.cs.length;
   $("#novo").hidden = !t.cs.length;
   if ($("#ped").open) renderPed();
@@ -360,9 +367,11 @@ function renderPed(){
   }).join("") : `<div class="vazio">Nenhum item. Volte ao catálogo e toque no + dos produtos.</div>`;
   $("#totais").innerHTML = `
     <div><span>Produtos (${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças)</span><span>${brl(t.prod)}</span></div>
+    ${t.desc ? `<div style="color:var(--ok);font-weight:700"><span>Desconto ${String(Math.round(t.desc*100))}%</span><span>− ${brl(t.vdesc)}</span></div>
+    <div><span>Valor líquido</span><span>${brl(t.liq)}</span></div>` : ""}
     <div><span>IPI ${String(IPI*100).replace(".",",")}%</span><span>${brl(t.ipi)}</span></div>
     <div class="big"><span>Total com IPI</span><span>${brl(t.total)}</span></div>
-    <div style="font-size:12.5px;color:var(--muted)"><span>Preços de tabela, sem desconto. Desconto e prazo conforme a política Xeryus, confirmados pela FRS.</span></div>`;
+    <div style="font-size:12.5px;color:var(--muted);display:block;line-height:1.45">${faixasTxt} Prazo e condições confirmados pela FRS.</div>`;
   checa();
 }
 $("#linhas").addEventListener("click", e => {
@@ -386,7 +395,7 @@ function mensagem(){
   if (v.obs) L.push(`Obs.: ${v.obs}`);
   L.push("");
   for (const c of t.cs){ const p = P[c]; L.push(`${pedido[c]}x ${c} - ${p.d} - ${brl(p.p)} = ${brl(p.p * pedido[c])}`); }
-  L.push("", `Itens: ${t.cs.length} | Peças: ${t.pecas}`, `Produtos: ${brl(t.prod)}`, `IPI ${String(IPI*100).replace(".",",")}%: ${brl(t.ipi)}`, `*Total com IPI: ${brl(t.total)}*`, `(tabela ${META.tabela}, sem desconto)`);
+  L.push("", `Itens: ${t.cs.length} | Peças: ${t.pecas}`, `Produtos (tabela): ${brl(t.prod)}`, ...(t.desc ? [`Desconto ${String(Math.round(t.desc*100))}%: - ${brl(t.vdesc)}`, `Valor líquido: ${brl(t.liq)}`] : []), `IPI ${String(IPI*100).replace(".",",")}%: ${brl(t.ipi)}`, `*Total com IPI: ${brl(t.total)}*`, `(tabela ${META.tabela})`);
   return L.join("\n");
 }
 
@@ -421,7 +430,7 @@ async function gerarPDF(){
   doc.setFillColor(...TIN); doc.rect(0, 0, W, 22, "F");
   doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.text("PEDIDO XERYUS", M, 11);
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.text("FRS Representações · WhatsApp (44) 99908-1166", M, 17);
-  doc.text(data, W - M, 11, {align:"right"}); doc.text(`Tabela ${META.tabela} · sem desconto`, W - M, 17, {align:"right"});
+  doc.text(data, W - M, 11, {align:"right"}); doc.text(`Tabela ${META.tabela}`, W - M, 17, {align:"right"});
   let y = 29; doc.setTextColor(...TIN);
   const linha = (r, val) => { doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text(r, M, y); doc.setFont("helvetica","normal");
     const tx = doc.splitTextToSize(val || "-", W - 2*M - 28); doc.text(tx, M + 28, y); y += 5 * tx.length; };
@@ -446,17 +455,18 @@ async function gerarPDF(){
     }
   });
   y = doc.lastAutoTable.finalY + 6;
-  if (y > H - 45){ doc.addPage(); y = 20; }
+  if (y > H - 60){ doc.addPage(); y = 20; }
   const tl = (r, val, big) => { doc.setFont("helvetica", big ? "bold" : "normal"); doc.setFontSize(big ? 13 : 10.5);
     doc.text(r, W - M - 105, y); doc.text(val, W - M, y, {align:"right"}); y += big ? 8 : 6; };
   tl(`Produtos (${t.cs.length} ${t.cs.length > 1 ? "itens" : "item"} · ${t.pecas} peças)`, brl(t.prod));
+  if (t.desc){ tl(`Desconto ${String(Math.round(t.desc*100))}%`, "- " + brl(t.vdesc)); tl("Valor líquido", brl(t.liq)); }
   tl(`IPI ${String(IPI*100).replace(".",",")}%`, brl(t.ipi));
   doc.setDrawColor(...TIN); doc.line(W - M - 105, y - 3.5, W - M, y - 3.5); y += 1.5;
   tl("TOTAL COM IPI", brl(t.total), true);
   const n = doc.getNumberOfPages();
   for (let i = 1; i <= n; i++){
     doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...CIN);
-    doc.text(`Preços de tabela sem desconto; desconto e prazo conforme política Xeryus. Estoque de ${META.estoque.replace("-","/")}, sujeito a confirmação.`, M, H - 7);
+    doc.text(`Desconto pelo líquido: R$ 3.500-5.000 = 5%; R$ 5.000-10.000 = 10%; R$ 10.000-20.000 = 15%. Estoque de ${META.estoque.replace("-","/")}, sujeito a confirmação.`, M, H - 7);
     doc.text(`Página ${i} de ${n}`, W - M, H - 7, {align:"right"});
   }
   return new File([doc.output("blob")], `Pedido-Xeryus_${slug(v.loja)}_${agora.toISOString().slice(0,10)}.pdf`, {type:"application/pdf"});
