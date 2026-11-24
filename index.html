@@ -204,12 +204,21 @@ const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; 
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
 
 let pedido = load("xer-pedido", {});            // código -> qtd
-Object.keys(pedido).forEach(c => { if (!P[c] || P[c].st !== "ok") delete pedido[c]; });
+const avisosPed = [];
+Object.keys(pedido).forEach(c => {
+  const p = P[c];
+  if (!p || p.st !== "ok") { avisosPed.push(`${c}${p ? " " + p.d : ""}: saiu do pedido (sem estoque)`); delete pedido[c]; return; }
+  if (pedido[c] > p.s) {
+    if (p.s < 2) { avisosPed.push(`${c} ${p.d}: saiu do pedido (saldo ${p.s}, abaixo do mínimo de 2)`); delete pedido[c]; }
+    else { avisosPed.push(`${c} ${p.d}: de ${pedido[c]} para ${p.s} un. (saldo atual)`); pedido[c] = p.s; }
+  }
+});
 const maxQ = c => P[c].s || 9999;
 const ordem = load("xer-ordem", []).filter(c => pedido[c]);  // ordem de inclusão
 function save(){ store("xer-pedido", pedido); store("xer-ordem", ordem); }
 
-$("#dica").innerHTML = `Toque no <span class="plus">+</span> ao lado do código para colocar <b>${QMIN} unidades</b> (mínimo por item); toque de novo no número para mudar a quantidade. Produto com <b>X vermelho</b> está sem estoque. Preços da tabela Xeryus de ${META.tabela}; o total já soma o <b>IPI de ${String(IPI*100).replace(".",",")}%</b>.<br>${faixasTxt}`;
+$("#dica").innerHTML = `Toque no <span class="plus">+</span> ao lado do código para colocar <b>${QMIN} unidades</b> (mínimo por item); toque de novo no número para mudar a quantidade. Vale o botão de cada item: <b>×</b> cinza = sem estoque; <b>+</b> = disponível. O X vermelho desenhado na foto pode estar desatualizado. Preços da tabela Xeryus de ${META.tabela}; o total já soma o <b>IPI de ${String(IPI*100).replace(".",",")}%</b>.<br>${faixasTxt}`;
+if (avisosPed.length) { const bx = document.createElement("div"); bx.id = "avisoPed"; bx.setAttribute("role","alert"); bx.style.cssText = "margin:10px;padding:10px 12px;border:2px solid #d9480f;background:#fff4e6;border-radius:10px;font-size:14px"; bx.innerHTML = "<b>O estoque mudou e seu pedido salvo foi ajustado:</b><br>" + avisosPed.map(esc).join("<br>"); $("#dica").after(bx); save(); }
 $("#rodape").textContent = `Estoque de ${META.estoque.replace("-","/")} · sujeito a confirmação · FRS Representações · WhatsApp (44) 99908-1166`;
 
 // ---------- abas e páginas
@@ -227,6 +236,7 @@ $("#tabs").addEventListener("click", e => {
 function botao(c){
   const p = P[c], q = pedido[c];
   if (p.st !== "ok") return `<button class="add off" data-c="${c}" aria-label="${c} sem estoque">×</button>`;
+  if (p.r && !q) return `<button class="add" data-c="${c}" aria-label="Adicionar ${c}">+</button><small style="position:absolute;left:calc(100% + 34px);top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#0b7a3b;background:#fff;border-radius:6px;padding:0 4px;white-space:nowrap;box-shadow:0 0 0 1px #0b7a3b">em estoque</small>`;
   if (q) return `<button class="add on" data-c="${c}" aria-label="${c}: ${q} unidades">${q}<small>un</small></button>`;
   return `<button class="add" data-c="${c}" aria-label="Adicionar ${c}">+</button>`;
 }
@@ -265,7 +275,7 @@ function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add(
 
 // ---------- janela do item
 let itemC = null;
-const estTxt = p => ({ok: `Em estoque: ${p.s} un.`, pouco: `Só ${p.s} un. em estoque — abaixo do mínimo de ${QMIN} por item`, esg: "Esgotado", compra: "Esgotado · em compra pela fábrica", fora: "Fora de linha / sem preço"})[p.st];
+const estTxt = p => ({ok: `Em estoque: ${p.s} un.`, pouco: `Só ${p.s} un. em estoque — abaixo do mínimo de ${QMIN} por item`, esg: "Esgotado", compra: "Esgotado · em compra pela fábrica", fora: "Fora de linha / sem preço", sem: `Sem confirmação de estoque na tabela de ${META.estoque.replace("-","/")}`})[p.st];
 function abreItem(c){
   itemC = c; const p = P[c];
   const img = $("#item .foto img"); img.src = p.m ? `mini/${c}.jpg` : ""; img.alt = p.d;
